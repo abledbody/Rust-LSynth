@@ -27,7 +27,7 @@ impl Channel {
 		Channel {
 			period: 0.0,
 			waveform: 0,
-			custom_waveform: [0.0; 16],
+			custom_waveform: [0.0; waveform::CUSTOM_WIDTH],
 			
 			frequency: 440.0,
 			amplitude: 0.0,
@@ -120,6 +120,10 @@ impl Channel {
 	
 	pub fn set_waveform(&mut self, value: usize) {
 		self.waveform = value;
+	}
+	
+	pub fn set_custom_waveform(&mut self, waveform: [f32; waveform::CUSTOM_WIDTH]) {
+		self.custom_waveform = waveform;
 	}
 }
 

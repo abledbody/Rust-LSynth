@@ -9,6 +9,7 @@ pub enum Command {
 	SetFrequency(usize, f32),
 	SetAmplitude(usize, f32),
 	SetPanning(usize, f32),
+	SetCustomWaveform(usize, [f32; waveform::CUSTOM_WIDTH]),
 	
 	ForceSetAmplitude(usize, f32),
 	ForceSetPanning(usize, f32),
@@ -145,7 +146,11 @@ impl Chip {
 						}
 						
 						Command::SetWaveform(channel, value) => {
-							self.channels[channel].set_waveform(value)
+							self.channels[channel].set_waveform(value);
+						}
+						
+						Command::SetCustomWaveform(channel, waveform) => {
+							self.channels[channel].set_custom_waveform(waveform);
 						}
 						
 						Command::Wait() => {
