@@ -10,5 +10,5 @@ edition = "2018"
 rand = "0.7.3"
 
 [lib]
-name = "lsynth"
-crate-type = ["cdylib"]
+#name = "lsynth"
+#crate-type = ["cdylib"]

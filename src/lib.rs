@@ -1,63 +1,112 @@
-mod waveform;
+#![deny(clippy::missing_docs_in_private_items)]
+
+//! This library is for generating LSynth audio streams.
+
+pub mod waveform;
 mod channel;
 
 use std::collections::VecDeque;
-use crate::channel::Channel;
+use crate::channel::ChannelState;
 
+/// The different types of commands that can be sent to channels. The first parameter of each variant is usually a channel index.
 pub enum Command {
+	/// An instruction to set the waveform of the channel.
+	///
+	/// | Index | Type           |
+	/// |---|----------------|
+	/// | 0 | Sine           |
+	/// | 1 | Triangle       |
+	/// | 2 | Rectified Sine |
+	/// | 3 | Saw            |
+	/// | 4 | Square         |
+	/// | 5 | Pulse          |
+	/// | 6 | Noise          |
+	/// | 7 | Custom         |
 	SetWaveform(usize, usize),
+	/// An instruction to set the frequency of the channel in hertz.
 	SetFrequency(usize, f32),
+	/// An instruction to set the amplitude of the channel on a scale of 0..1
 	SetAmplitude(usize, f32),
+	/// An instruction to set the panning of the channel on a scale of -1..1
 	SetPanning(usize, f32),
+	/// An instruction to change the custom waveform stored in the channel.
 	SetCustomWaveform(usize, [f32; waveform::CUSTOM_WIDTH]),
 	
+	/// An instruction to change the amplitude of the channel instantly, instead of softly.
 	ForceSetAmplitude(usize, f32),
+	/// An instruction to change the panning of the channel instantly, instead of softly.
 	ForceSetPanning(usize, f32),
 	
+	/// An instruction to gradually change the frequency of the channel from its current state to a target state with the specified rate of change.
 	FrequencySlide(usize, f32, f32),
+	/// An instruction to gradually change the amplitude of the channel from its current state to a target state with the specified rate of change.
 	AmplitudeSlide(usize, f32, f32),
+	/// An instruction to gradually change the panning of the channel from its current state to a target state with the specified rate of change.
 	PanningSlide(usize, f32, f32),
 	
-	Wait(),
-	Request(),
+	/// An instruction to wait for one tick.
+	Wait()
 }
 
-pub struct Chip {
-	channels: Vec<Channel>,
-	samplerate: usize,
-	timestep: f32,
-	amplitude: f32,
-	
+/// The current state of the LSynth chip.
+pub struct ChipState {
+	/// The states of all the channels currently operated by LSynth.
+	channels: Vec<ChannelState>,
+	/// A buffer of all the instructions that have been given to the chip.
 	command_buffer: VecDeque<Command>,
+	/// The number of samples that have yet to be accounted for during this tick cycle.
 	wait_samples: f32,
-	tick_samples: f32,
-	
-	request_callback: Option<fn(&mut Chip)>,
+	/// Details how this chip is intended to operate.
+	parameters: ChipParameters,
 }
 
-impl Chip {
-	pub fn new(channel_count: usize, samplerate: usize, amplitude: f32, tick_rate: f32) -> Chip {
-		Chip {
-			channels: (0..channel_count).map(|_| Channel::new()).collect(),
+/// Parameters detailing how an LSynth chip is intended to operate.
+pub struct ChipParameters {
+	/// The samplerate in hertz.
+	samplerate: usize,
+	/// Seconds per sample
+	timestep: f32,
+	/// The global amplitude of this chip on a scale of 0..1. Affects all channels.
+	amplitude: f32,
+	/// How many samples are in a tick.
+	tick_samples: f32,
+}
+
+impl ChipParameters {
+	/// Creates a new set of chip parameters. Tick rate is ticks per second.
+	pub fn new(samplerate: usize, amplitude: f32, tick_rate: f32) -> ChipParameters {
+		ChipParameters {
 			samplerate,
 			timestep: 1.0/(samplerate as f32),
 			amplitude,
 			
-			command_buffer: VecDeque::new(),
-			wait_samples: 0.0,
-			tick_samples: Chip::tick_rate_conversion(samplerate, tick_rate),
-			request_callback: None,
+			tick_samples: ChipState::convert_tick_rate(samplerate, tick_rate),
 		}
 	}
 	
-	fn tick_rate_conversion(samplerate: usize, tick_rate: f32) -> f32 {
-		(samplerate as f64 * tick_rate as f64) as f32
-	}
-	
+	/// Changes the time it takes for a tick to elapse.
 	pub fn set_tick_rate(&mut self, tick_rate: f32) {
-		self.tick_samples = Chip::tick_rate_conversion(self.samplerate, tick_rate)
+		self.tick_samples = ChipState::convert_tick_rate(self.samplerate, tick_rate)
+	}
+}
+
+impl ChipState {
+	/// Creates a new LSynth chip.
+	pub fn new(channel_count: usize, parameters: ChipParameters) -> ChipState {
+		ChipState {
+			channels: (0..channel_count).map(|_| ChannelState::new()).collect(),
+			command_buffer: VecDeque::new(),
+			wait_samples: 0.0,
+			parameters
+		}
 	}
 	
+	/// Converts from ticks per second to samples per tick.
+	fn convert_tick_rate(samplerate: usize, tick_rate: f32) -> f32 {
+	 	(samplerate as f64 / tick_rate as f64) as f32
+	}
+	
+	/// Compiles samples from every channel into a single stereo track.
 	fn get_sample(&self) -> (f32, f32) {
 		
 		let mut left_sample = 0.0;
@@ -69,9 +118,10 @@ impl Chip {
 			right_sample += channel_right_sample;
 		};
 		
-		(left_sample * self.amplitude, right_sample * self.amplitude)
+		(left_sample * self.parameters.amplitude, right_sample * self.parameters.amplitude)
 	}
 	
+	/// Fills an array slice with interlaced stereo samples generated by the chip.
 	pub fn generate(&mut self, buffer: &mut [f32]) {
 		let samples = buffer.len();
 		
@@ -86,7 +136,7 @@ impl Chip {
 			let (left_sample, right_sample) = self.get_sample();
 			
 			for i in 0..self.channels.len() {
-				self.channels[i].advance(self.timestep);
+				self.channels[i].advance(self.parameters.timestep);
 			}
 			
 			buffer[sample] = left_sample;
@@ -94,18 +144,17 @@ impl Chip {
 		};
 	}
 	
+	/// Inserts a new command into the chip queue to be executed by the channels.
 	pub fn queue_command(&mut self, command: Command) {
 		self.command_buffer.push_back(command);
 	}
 	
-	pub fn set_request_callback(&mut self, request_callback: fn(&mut Chip)) {
-		self.request_callback = Some(request_callback);
-	}
-	
+	/// Increases ```wait_samples``` by the number of samples it takes for a tick to elapse.
 	fn tick(&mut self) {
-		self.wait_samples += self.tick_samples;
+		self.wait_samples += self.parameters.tick_samples;
 	}
 	
+	/// Executes every command in the queue.
 	fn execute_commands(&mut self) {
 		loop {
 			let command = self.command_buffer.pop_front();
@@ -158,14 +207,7 @@ impl Chip {
 							break;
 						}
 						
-						Command::Request() => {
-							match self.request_callback {
-								Some(func) => func(self),
-								None => ()
-							}
-						}
-						
-						_ => panic!("Command not implemented"),
+						//_ => panic!("Command not implemented"),
 					}
 				},
 				None => {
