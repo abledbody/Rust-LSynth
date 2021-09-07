@@ -94,9 +94,9 @@ impl ChannelState {
 		// This is a really nice way of looping ascending values around 0-1.
 		self.period -= self.period.floor();
 		
-		self.frequency += approach(self.frequency, self.frequency_slide_target, self.frequency_rate * step);
-		self.amplitude += approach(self.amplitude, self.amplitude_slide_target, self.amplitude_rate * step);
-		self.panning += approach(self.panning, self.panning_slide_target, self.panning_rate * step);
+		self.frequency = approach(self.frequency, self.frequency_slide_target, self.frequency_rate * step);
+		self.amplitude = approach(self.amplitude, self.amplitude_slide_target, self.amplitude_rate * step);
+		self.panning = approach(self.panning, self.panning_slide_target, self.panning_rate * step);
 	}
 	
 	/// Immediately sets the amplitude of the channel to the provided value.
@@ -161,5 +161,5 @@ impl ChannelState {
 /// Advances value towards target with the provided step.
 fn approach(value: f32, target: f32, step: f32) -> f32 {
 	let abs_rate = step.abs();
-	(target - value).min(abs_rate).max(-abs_rate)
+	value + (target - value).min(abs_rate).max(-abs_rate)
 }
