@@ -8,6 +8,7 @@ mod channel;
 use crate::channel::ChannelState;
 
 /// The different types of commands that can be sent to channels. The first parameter of each variant is usually a channel index.
+#[derive(Clone)]
 pub enum Command {
 	/// An instruction to set the waveform of the channel.
 	///
@@ -144,7 +145,7 @@ impl ChipState {
 	}
 	
 	/// Inserts a new command into the chip queue to be executed by the channels.
-	pub fn queue_command(&mut self, channel: usize, command: Command) {
+	pub fn queue_command(&mut self, command: Command, channel: usize) {
 		self.channels[channel].command_buffer.push_back(command);
 	}
 	
