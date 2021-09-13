@@ -101,59 +101,76 @@ impl ChannelState {
 	
 	/// Immediately sets the amplitude of the channel to the provided value.
 	pub fn force_set_amplitude(&mut self, value: f32) {
+		let value = value.clamp(0_f32, 1_f32);
 		self.amplitude = value;
 		self.amplitude_slide_target = value;
 	}
 	
 	/// Sets the amplitude of the channel to the provided value with ramping.
 	pub fn set_amplitude(&mut self, value: f32) {
+		let value = value.clamp(0_f32, 1_f32);
 		let slide_rate = (self.amplitude - value) / RAMPING_TIME;
 		self.slide_amplitude(value, slide_rate);
 	}
 	
 	/// Initiates a slide from the current amplitude to the target amplitude with the provided rate.
 	pub fn slide_amplitude(&mut self, value: f32, rate: f32) {
+		let value = value.clamp(0_f32, 1_f32);
 		self.amplitude_slide_target = value;
 		self.amplitude_rate = rate;
 	}
 	
 	/// Immediately sets the frequency of the channel to the provided value.
 	pub fn set_frequency(&mut self, value: f32) {
+		let value = value.max(0_f32);
 		self.frequency = value;
 		self.frequency_slide_target = value;
 	}
 	
 	/// Initiates a slide from the current frequency to the target frequency with the provided rate.
 	pub fn slide_frequency(&mut self, value: f32, rate: f32) {
+		let value = value.max(0_f32);
 		self.frequency_slide_target = value;
 		self.frequency_rate = rate;
 	}
 	
 	/// Immediately sets the panning of the channel to the provided value.
 	pub fn force_set_panning(&mut self, value: f32) {
+		let value = value.clamp(-1_f32, 1_f32);
 		self.panning = value;
 		self.panning_slide_target = value;
 	}
 	
 	/// Sets the panning of the channel to the provided value with ramping.
 	pub fn set_panning(&mut self, value: f32) {
+		let value = value.clamp(-1_f32, 1_f32);
 		let slide_rate = (self.panning - value) / RAMPING_TIME;
 		self.slide_panning(value, slide_rate);
 	}
 	
 	/// Initiates a slide from the current panning to the target panning with the provided rate.
 	pub fn slide_panning(&mut self, value: f32, rate: f32) {
+		let value = value.clamp(-1_f32, 1_f32);
 		self.panning_slide_target = value;
 		self.panning_rate = rate;
 	}
 	
 	/// Sets the type of waveform that this channel will be generating samples from.
-	pub fn set_waveform(&mut self, value: usize) {
-		self.waveform = value;
+	pub fn set_waveform(&mut self, value: usize) -> core::result::Result<(), String> {
+		if value > 7 {
+			Err(format!("Attempted to set LSynth channel to invalid waveform: {}", value))
+		}
+		else {
+			self.waveform = value;
+			Ok(())
+		}
 	}
 	
 	/// Updates the channels current custom waveform. This will not be played unless the current waveform is 7.
 	pub fn set_custom_waveform(&mut self, waveform: CustomWaveform) {
+		for value in waveform.iter_mut() {
+			*value = value.clamp(-1_f32, 1_f32);
+		}
 		self.custom_waveform = waveform;
 	}
 }
