@@ -4,7 +4,7 @@ use crate::{Command, waveform::{self, CustomWaveform}};
 use std::collections::VecDeque;
 
 /// The time it takes for amplitude and panning changes to occur. This prevents clicks from abrupt changes.
-pub const RAMPING_TIME: f32 = 0.002;
+pub const RAMPING_RATE: f32 = 500.0;
 
 /// All the parameters needed in order to sample from a channel.
 pub(crate) struct ChannelState {
@@ -21,6 +21,11 @@ pub(crate) struct ChannelState {
 	amplitude: f32,
 	/// The current panning of the waveform on a scale of -1..1. Affects the amplitude of both stereo samples independently.
 	panning: f32,
+	
+	/// The amplitude after being dampened by ramping. This is the actual value the sample uses.
+	ramped_amplitude: f32,
+	/// The panning after being dampened by ramping. This is the actual value the sample uses.
+	ramped_panning: f32,
 	
 	/// The frequency that the channel is attempting to approach.
 	frequency_slide_target: f32,
@@ -55,6 +60,9 @@ impl ChannelState {
 			amplitude: 0.0,
 			panning: 0.0,
 			
+			ramped_amplitude: 0.0,
+			ramped_panning: 0.0,
+			
 			frequency_slide_target: 440.0,
 			amplitude_slide_target: 0.0,
 			panning_slide_target: 0.0,
@@ -80,10 +88,10 @@ impl ChannelState {
 			6 => self.noise_sample,
 			7 => waveform::custom(self.period, &self.custom_waveform),
 			_ => 0.0,
-		} * self.amplitude;
+		} * self.ramped_amplitude;
 		
-		let left_sample = sample_output * (-self.panning + 1.0).min(1.0);
-		let right_sample = sample_output * (self.panning + 1.0).min(1.0);
+		let left_sample = sample_output * (-self.ramped_panning + 1.0).min(1.0);
+		let right_sample = sample_output * (self.ramped_panning + 1.0).min(1.0);
 		(left_sample, right_sample)
 	}
 	
@@ -98,6 +106,8 @@ impl ChannelState {
 		// This is a really nice way of looping ascending values around 0-1.
 		self.period -= self.period.floor();
 		
+		self.ramped_amplitude = approach(self.ramped_amplitude, self.amplitude, RAMPING_RATE * step);
+		self.ramped_panning = approach(self.ramped_panning, self.panning, RAMPING_RATE * step);
 		self.frequency = approach(self.frequency, self.frequency_slide_target, self.frequency_rate * step);
 		self.amplitude = approach(self.amplitude, self.amplitude_slide_target, self.amplitude_rate * step);
 		self.panning = approach(self.panning, self.panning_slide_target, self.panning_rate * step);
@@ -107,14 +117,15 @@ impl ChannelState {
 	pub fn force_set_amplitude(&mut self, value: f32) {
 		let value = value.clamp(0_f32, 1_f32);
 		self.amplitude = value;
+		self.ramped_amplitude = value;
 		self.amplitude_slide_target = value;
 	}
 	
 	/// Sets the amplitude of the channel to the provided value with ramping.
 	pub fn set_amplitude(&mut self, value: f32) {
 		let value = value.clamp(0_f32, 1_f32);
-		let slide_rate = (self.amplitude - value) / RAMPING_TIME;
-		self.slide_amplitude(value, slide_rate);
+		self.amplitude = value;
+		self.amplitude_slide_target = value;
 	}
 	
 	/// Initiates a slide from the current amplitude to the target amplitude with the provided rate.
@@ -142,14 +153,15 @@ impl ChannelState {
 	pub fn force_set_panning(&mut self, value: f32) {
 		let value = value.clamp(-1_f32, 1_f32);
 		self.panning = value;
+		self.ramped_panning = value;
 		self.panning_slide_target = value;
 	}
 	
 	/// Sets the panning of the channel to the provided value with ramping.
 	pub fn set_panning(&mut self, value: f32) {
 		let value = value.clamp(-1_f32, 1_f32);
-		let slide_rate = (self.panning - value) / RAMPING_TIME;
-		self.slide_panning(value, slide_rate);
+		self.panning = value;
+		self.panning_slide_target = value;
 	}
 	
 	/// Initiates a slide from the current panning to the target panning with the provided rate.
