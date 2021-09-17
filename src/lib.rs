@@ -31,6 +31,8 @@ pub enum Command {
 	SetPanning(f32),
 	/// An instruction to change the custom waveform stored in the channel.
 	SetCustomWaveform([f32; waveform::CUSTOM_WIDTH]),
+	/// An instruction to set the phase of a waveform directly.
+	SetPhase(f32),
 	
 	/// An instruction to change the amplitude of the channel instantly, instead of softly.
 	ForceSetAmplitude(f32),

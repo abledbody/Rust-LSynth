@@ -190,6 +190,11 @@ impl ChannelState {
 		self.custom_waveform = waveform;
 	}
 	
+	/// Sets the period of the waveform to the provided phase wrapped around 1.
+	pub fn set_phase(&mut self, phase: f32) {
+		self.period = phase % 1.0;
+	}
+	
 	/// Executes every command in the queue.
 	pub fn execute_commands(&mut self) -> core::result::Result<(), String> {
 		loop {
@@ -228,6 +233,8 @@ impl ChannelState {
 						Command::SetCustomWaveform(waveform) =>
 							{self.set_custom_waveform(waveform);}
 						
+						Command::SetPhase(period) => 
+							{self.set_phase(period);}
 						//_ => panic!("Command not implemented"),
 					}
 				},
