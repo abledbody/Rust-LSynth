@@ -1,6 +1,6 @@
 //! Contains tools for keeping track of the state of individual channels.
 
-use crate::{Command, waveform::{self, CustomWaveform}};
+use crate::{Command, waveform};
 use std::collections::VecDeque;
 
 /// The time it takes for amplitude and panning changes to occur. This prevents clicks from abrupt changes.
@@ -113,88 +113,6 @@ impl ChannelState {
 		self.panning = approach(self.panning, self.panning_slide_target, self.panning_rate * step);
 	}
 	
-	/// Immediately sets the amplitude of the channel to the provided value.
-	pub fn force_set_amplitude(&mut self, value: f32) {
-		let value = value.clamp(0_f32, 1_f32);
-		self.amplitude = value;
-		self.ramped_amplitude = value;
-		self.amplitude_slide_target = value;
-	}
-	
-	/// Sets the amplitude of the channel to the provided value with ramping.
-	pub fn set_amplitude(&mut self, value: f32) {
-		let value = value.clamp(0_f32, 1_f32);
-		self.amplitude = value;
-		self.amplitude_slide_target = value;
-	}
-	
-	/// Initiates a slide from the current amplitude to the target amplitude with the provided rate.
-	pub fn slide_amplitude(&mut self, value: f32, rate: f32) {
-		let value = value.clamp(0_f32, 1_f32);
-		self.amplitude_slide_target = value;
-		self.amplitude_rate = rate;
-	}
-	
-	/// Immediately sets the frequency of the channel to the provided value.
-	pub fn set_frequency(&mut self, value: f32) {
-		let value = value.max(0_f32);
-		self.frequency = value;
-		self.frequency_slide_target = value;
-	}
-	
-	/// Initiates a slide from the current frequency to the target frequency with the provided rate.
-	pub fn slide_frequency(&mut self, value: f32, rate: f32) {
-		let value = value.max(0_f32);
-		self.frequency_slide_target = value;
-		self.frequency_rate = rate;
-	}
-	
-	/// Immediately sets the panning of the channel to the provided value.
-	pub fn force_set_panning(&mut self, value: f32) {
-		let value = value.clamp(-1_f32, 1_f32);
-		self.panning = value;
-		self.ramped_panning = value;
-		self.panning_slide_target = value;
-	}
-	
-	/// Sets the panning of the channel to the provided value with ramping.
-	pub fn set_panning(&mut self, value: f32) {
-		let value = value.clamp(-1_f32, 1_f32);
-		self.panning = value;
-		self.panning_slide_target = value;
-	}
-	
-	/// Initiates a slide from the current panning to the target panning with the provided rate.
-	pub fn slide_panning(&mut self, value: f32, rate: f32) {
-		let value = value.clamp(-1_f32, 1_f32);
-		self.panning_slide_target = value;
-		self.panning_rate = rate;
-	}
-	
-	/// Sets the type of waveform that this channel will be generating samples from.
-	pub fn set_waveform(&mut self, value: usize) -> core::result::Result<(), String> {
-		if value > 7 {
-			Err(format!("Attempted to set LSynth channel to invalid waveform: {}", value))
-		}
-		else {
-			self.waveform = value;
-			Ok(())
-		}
-	}
-	
-	/// Updates the channels current custom waveform. This will not be played unless the current waveform is 7.
-	pub fn set_custom_waveform(&mut self, mut waveform: CustomWaveform) {
-		for value in waveform.iter_mut() {
-			*value = value.clamp(-1_f32, 1_f32);
-		}
-		self.custom_waveform = waveform;
-	}
-	
-	/// Sets the period of the waveform to the provided phase wrapped around 1.
-	pub fn set_phase(&mut self, phase: f32) {
-		self.period = phase % 1.0;
-	}
-	
 	/// Executes every command in the queue.
 	pub fn execute_commands(&mut self) -> core::result::Result<(), String> {
 		loop {
@@ -203,38 +121,75 @@ impl ChannelState {
 			match command {
 				Some(command) => {
 					match command {
-						Command::ForceSetAmplitude(value) => 
-							{self.force_set_amplitude(value);}
+						Command::ForceSetAmplitude(value) => {
+							let value = value.clamp(0_f32, 1_f32);
+							self.amplitude = value;
+							self.ramped_amplitude = value;
+							self.amplitude_slide_target = value;
+						}
 						
-						Command::SetAmplitude(value) =>
-							{self.set_amplitude(value);}
+						Command::SetAmplitude(value) => {
+							let value = value.clamp(0_f32, 1_f32);
+							self.amplitude = value;
+							self.amplitude_slide_target = value;
+						}
 						
-						Command::AmplitudeSlide(value, rate) =>
-							{self.slide_amplitude(value, rate);}
+						Command::AmplitudeSlide(value, rate) => {
+							let value = value.clamp(0_f32, 1_f32);
+							self.amplitude_slide_target = value;
+							self.amplitude_rate = rate;
+						}
 						
-						Command::SetFrequency(value) => 
-							{self.set_frequency(value);}
+						Command::SetFrequency(value) => {
+							let value = value.max(0_f32);
+							self.frequency = value;
+							self.frequency_slide_target = value;
+						}
 						
-						Command::FrequencySlide(value, rate) =>
-							{self.slide_frequency(value, rate);}
+						Command::FrequencySlide(value, rate) => {
+							let value = value.max(0_f32);
+							self.frequency_slide_target = value;
+							self.frequency_rate = rate;
+						}
 						
-						Command::ForceSetPanning(value) => 
-							{self.force_set_panning(value);}
+						Command::ForceSetPanning(value) => {
+							let value = value.clamp(-1_f32, 1_f32);
+							self.panning = value;
+							self.ramped_panning = value;
+							self.panning_slide_target = value;
+						}
 						
-						Command::SetPanning(value) =>
-							{self.set_panning(value);}
+						Command::SetPanning(value) => {
+							let value = value.clamp(-1_f32, 1_f32);
+							self.panning = value;
+							self.panning_slide_target = value;
+						}
 						
-						Command::PanningSlide(value, rate) =>
-							{self.slide_panning(value, rate);}
+						Command::PanningSlide(value, rate) => {
+							let value = value.clamp(-1_f32, 1_f32);
+							self.panning_slide_target = value;
+							self.panning_rate = rate;
+						}
 						
-						Command::SetWaveform(value) =>
-							{self.set_waveform(value)?;}
+						Command::SetWaveform(value) => {
+							if value > 7 {
+								return Err(format!("Attempted to set LSynth channel to invalid waveform: {}", value));
+							}
+							else {
+								self.waveform = value;
+							}
+						}
 						
-						Command::SetCustomWaveform(waveform) =>
-							{self.set_custom_waveform(waveform);}
+						Command::SetCustomWaveform(mut waveform) => {
+							for value in waveform.iter_mut() {
+								*value = value.clamp(-1_f32, 1_f32);
+							}
+							self.custom_waveform = waveform;
+						}
 						
-						Command::SetPhase(period) => 
-							{self.set_phase(period);}
+						Command::SetPhase(period) => {
+							self.period = period % 1.0;
+						}
 						//_ => panic!("Command not implemented"),
 					}
 				},
