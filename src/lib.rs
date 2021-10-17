@@ -9,7 +9,7 @@ pub mod errors;
 use channel::ChannelState;
 use errors::{InvalidChannelError, LSynthError};
 
-/// The different types of commands that can be sent to channels. The first parameter of each variant is usually a channel index.
+/// The different types of commands that can be sent to channels.
 #[derive(Clone)]
 pub enum Command {
 	/// An instruction to set the waveform of the channel.
