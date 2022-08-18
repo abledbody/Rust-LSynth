@@ -11,5 +11,5 @@ rand = "0.7.3"
 rayon = "1.5.1"
 
 [lib]
-#name = "lsynth"
-#crate-type = ["cdylib"]
+name = "lsynth"
+crate-type = ["cdylib"]

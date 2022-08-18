@@ -46,6 +46,7 @@ pub(crate) struct ChannelState {
 
 impl ChannelState {
 	/// Creates a new channel.
+	#[no_mangle]
 	pub fn new() -> ChannelState {
 		ChannelState {
 			period: 0.0,
@@ -72,6 +73,7 @@ impl ChannelState {
 	}
 	
 	/// Samples the channel in its current state.
+	#[no_mangle]
 	pub fn sample(&self) -> (f32, f32) {
 		let sample_output = match self.waveform {
 			0 => waveform::sine(self.period),
@@ -91,6 +93,7 @@ impl ChannelState {
 	}
 	
 	/// Updates the state of the channel by the provided timestep in seconds.
+	#[no_mangle]
 	pub fn advance(&mut self, step: f32) {
 		self.period += self.frequency * step;
 		
@@ -108,7 +111,8 @@ impl ChannelState {
 		self.panning = approach(self.panning, self.panning_slide_target, self.panning_rate * step);
 	}
 	
-	/// Executes every command in the queue.
+	/// Executes the provided command immediately.
+	#[no_mangle]
 	pub fn execute_command(&mut self, command: Command) -> core::result::Result<(), LSynthError> {
 		match command {
 			Command::ForceSetAmplitude(value) => {
