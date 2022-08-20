@@ -8,6 +8,8 @@ pub enum LSynthError {
 	InvalidWaveform(InvalidWaveformError),
 	/// Attempted to send a command to a channel that does not exist.
 	InvalidChannel(InvalidChannelError),
+	/// Attempted to fill a buffer with an odd number of samples.
+	UnevenBufferSlice(UnevenBufferSliceError),
 }
 
 impl Debug for LSynthError {
@@ -15,6 +17,7 @@ impl Debug for LSynthError {
         match self {
             Self::InvalidWaveform(err) => write!(f, "{:?}", err),
             Self::InvalidChannel(err) => write!(f, "{:?}", err),
+            Self::UnevenBufferSlice(err) => write!(f, "{:?}", err),
         }
     }
 }
@@ -42,5 +45,17 @@ pub struct InvalidChannelError {
 impl Debug for InvalidChannelError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "Unable to send command to channel {}. Chip only has {} channels.", self.attempted_channel, self.max_channels_of_chip)
+    }
+}
+
+/// Information regarding an uneven buffer slice.
+pub struct UnevenBufferSliceError {
+	/// The length of the slice.
+	pub slice_length: usize,
+}
+
+impl Debug for UnevenBufferSliceError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Provided slice length of {} is an odd number. Cannot generate stereo audio.", self.slice_length)
     }
 }

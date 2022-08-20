@@ -46,8 +46,7 @@ pub(crate) struct ChannelState {
 
 impl ChannelState {
 	/// Creates a new channel.
-	#[no_mangle]
-	pub fn new() -> ChannelState {
+	pub(crate) fn new() -> ChannelState {
 		ChannelState {
 			period: 0.0,
 			waveform: 0,
