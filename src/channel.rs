@@ -4,6 +4,8 @@ use crate::{Command, waveform, errors::*};
 
 /// The time it takes for amplitude and panning changes to occur. This prevents clicks from abrupt changes.
 pub const RAMPING_RATE: f32 = 500.0;
+/// Used to reduce the wandering of brownian noise. Calculated as `x * (1 - BROWNIAN_LEAK * timestep)`
+pub const BROWNIAN_LEAK: f32 = 10000.0;
 
 /// All the parameters needed in order to sample from a channel.
 pub(crate) struct ChannelState {
@@ -96,7 +98,9 @@ impl ChannelState {
 	pub fn advance(&mut self, step: f32) {
 		self.period += self.frequency * step;
 		
-		self.noise_sample = soften(self.noise_sample, waveform::noise() * self.frequency * step).clamp(-1.0, 1.0);
+		if self.period >= 1.0 {
+			self.noise_sample = (self.noise_sample + waveform::noise()) * (1.0 - BROWNIAN_LEAK * step);
+		}
 		
 		// This is a really nice way of looping ascending values around 0-1.
 		self.period -= self.period.floor();
@@ -193,10 +197,4 @@ impl ChannelState {
 fn approach(value: f32, target: f32, step: f32) -> f32 {
 	let abs_rate = step.abs();
 	value + (target - value).min(abs_rate).max(-abs_rate)
-}
-
-/// Limits the addend so that it will always change the value, but less so when near the boundaries of -1 and 1.
-fn soften(value: f32, addend: f32,) -> f32 {
-	addend + value * (-(addend.abs()) + 1.0)
-	//addend + value + (value.abs() * addend + addend.abs() * value) * -0.5
 }
