@@ -22,7 +22,7 @@ impl Debug for LSynthError {
     }
 }
 
-/// Information regarding an invalid waveform error.
+/// Occurs when attempting to send a command to set the channel to a waveform that does not exist.
 pub struct InvalidWaveformError {
 	/// The number that was attempted to be used as a waveform index.
 	pub attempted_waveform: usize,
@@ -34,11 +34,11 @@ impl Debug for InvalidWaveformError {
     }
 }
 
-/// Information regarding an invalid channel error.
+/// Occurs when attempting to send a command to a channel that does not exist.
 pub struct InvalidChannelError {
-	/// How many channels the chip actually has.
-	pub attempted_channel: usize,
 	/// The channel that a command was attempted to be sent to.
+	pub attempted_channel: usize,
+	/// How many channels the chip actually has.
 	pub max_channels_of_chip: usize,
 }
 
@@ -48,7 +48,7 @@ impl Debug for InvalidChannelError {
     }
 }
 
-/// Information regarding an uneven buffer slice.
+/// Occurs when attempting to fill a buffer with an odd number of samples.
 pub struct UnevenBufferSliceError {
 	/// The length of the slice.
 	pub slice_length: usize,

@@ -11,6 +11,7 @@ pub extern "C" fn ls_init(channel_count: usize, samplerate: usize, amplitude: f3
 /// Generates audio with the provided chip.
 /// # Safety
 /// chip_state must be a valid ChipState generated from the ls_init function.
+/// 
 /// buffer_ptr must point to the first f32 in an array, and buffer_len must be the length of that array.
 #[no_mangle]
 pub unsafe extern "C" fn ls_generate(chip_state: *mut ChipState, buffer_ptr: *mut f32, buffer_len: usize, buffer_start: usize) -> ChipGenerationData {
@@ -124,7 +125,7 @@ pub unsafe extern "C" fn ls_frequency_slide(chip_state: *mut ChipState, channel:
 	let _ = chip_state.send_command(Command::FrequencySlide(frequency, rate), channel);
 }
 
-/// Sends a AmplitudeSlide command to the given channel.
+/// Sends an AmplitudeSlide command to the given channel.
 /// # Safety
 /// chip_state must be a valid ChipState generated from the ls_init function.
 #[no_mangle]
