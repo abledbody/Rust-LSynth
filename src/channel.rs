@@ -98,8 +98,11 @@ impl ChannelState {
 	pub fn advance(&mut self, step: f32) {
 		self.period += self.frequency * step;
 		
-		if self.period >= 1.0 {
-			self.noise_sample = (self.noise_sample + waveform::noise()) * (1.0 - BROWNIAN_LEAK * step);
+		if self.waveform == 6 {
+			while self.period >= 1.0 {
+				self.noise_sample = (self.noise_sample + waveform::noise()) * (1.0 - BROWNIAN_LEAK * step);
+				self.period -= 1.0
+			}
 		}
 		
 		// This is a really nice way of looping ascending values around 0-1.
