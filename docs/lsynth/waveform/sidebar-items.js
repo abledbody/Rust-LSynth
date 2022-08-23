@@ -1,0 +1,1 @@
+initSidebarItems({"constant":[["CUSTOM_WIDTH","The number of samples in a custom waveform."]],"type":[["CustomWaveform","Custom waveforms only need to contain an array of data. This is a convenience type for arrays that follow the required pattern."]]});
