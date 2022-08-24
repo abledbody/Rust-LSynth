@@ -1,6 +1,45 @@
 #![deny(clippy::missing_docs_in_private_items)]
 
 //! This library is for generating LSynth audio streams.
+//! 
+//! Here is an example of the basic setup of the LSynth chip.
+//! ```
+//! use lsynth::*;
+//! 
+//! let mut chip = ChipState::new(4, ChipParameters::new(44_100, 0.5, 120.0));
+//! 
+//! chip.send_command(Command::SetAmplitude(0.0), 0);
+//! chip.send_command(Command::SetFrequency(110.0), 0);
+//! 
+//! let mut frequency = 110.0;
+//! let mut beat = 0;
+//! 
+//! let mut request_callback = move |chip: &mut ChipState| {
+//!     beat += 1;
+//!     while beat >= 4 {
+//!         frequency += 110.0;
+//! 
+//!         chip.send_command(Command::SetFrequency(frequency), 0);
+//!         beat -= 4;
+//!     }
+//! };
+//! 
+//! let mut audio_sample_request = move |buffer: &mut [f32]| {
+//!     let mut sample_index = 0;
+//!     
+//!     while sample_index < buffer.len() {
+//!         let generated_data = chip.generate(&mut buffer[sample_index..]).unwrap();
+//!         sample_index += generated_data.generated;
+//!         
+//!         assert!(generated_data.generated != 0);
+//!     
+//!         if generated_data.remaining_samples == 0 { request_callback(&mut chip); }
+//!     }
+//! };
+//! #
+//! # let mut audio_stream = [0.0; 512];
+//! # audio_sample_request(&mut audio_stream);
+//! ```
 
 pub mod waveform;
 mod channel;

@@ -4,7 +4,41 @@
     </nav>
     <nav class="sidebar"><a class="sidebar-logo" href="../lsynth/index.html"><div class="logo-container"><img class="rust-logo" src="../rust-logo.svg" alt="logo"></div>
         </a><h2 class="location"><a href="#">Crate lsynth</a></h2><div class="sidebar-elems"><div class="block"><ul><li class="version">Version 0.1.0</li><li><a id="all-types" href="all.html">All Items</a></li></div></ul><section><div class="block"><ul><li><a href="#modules">Modules</a></li><li><a href="#structs">Structs</a></li><li><a href="#enums">Enums</a></li></ul></div></section><div id="sidebar-vars" data-name="lsynth" data-ty="mod" data-relpath=""></div><script defer src="sidebar-items.js"></script></div></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../lsynth/index.html"><img class="rust-logo" src="../rust-logo.svg" alt="logo"></a><nav class="sub"><div class="theme-picker hidden"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="22" height="22" alt="Pick another theme!" src="../brush.svg"></button><div id="theme-choices" role="menu"></div></div><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../wheel.svg"></a></div></form></nav></div><section id="main-content" class="content"><div class="main-heading">
-    <h1 class="fqn"><span class="in-band">Crate <a class="mod" href="#">lsynth</a><button id="copy-path" onclick="copy_path(this)" title="Copy item path to clipboard"><img src="../clipboard.svg" width="19" height="18" alt="Copy item path"></button></span></h1><span class="out-of-band"><a class="srclink" href="../src/lsynth/lib.rs.html#1-200">source</a> · <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span></div><details class="rustdoc-toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>This library is for generating LSynth audio streams.</p>
+    <h1 class="fqn"><span class="in-band">Crate <a class="mod" href="#">lsynth</a><button id="copy-path" onclick="copy_path(this)" title="Copy item path to clipboard"><img src="../clipboard.svg" width="19" height="18" alt="Copy item path"></button></span></h1><span class="out-of-band"><a class="srclink" href="../src/lsynth/lib.rs.html#1-239">source</a> · <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span></div><details class="rustdoc-toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>This library is for generating LSynth audio streams.</p>
+<p>Here is an example of the basic setup of the LSynth chip.</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use</span> <span class="ident">lsynth</span>::<span class="kw-2">*</span>;
+ 
+<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">chip</span> <span class="op">=</span> <span class="ident">ChipState::new</span>(<span class="number">4</span>, <span class="ident">ChipParameters::new</span>(<span class="number">44_100</span>, <span class="number">0.5</span>, <span class="number">120.0</span>));
+ 
+<span class="ident">chip</span>.<span class="ident">send_command</span>(<span class="ident">Command::SetAmplitude</span>(<span class="number">0.0</span>), <span class="number">0</span>);
+<span class="ident">chip</span>.<span class="ident">send_command</span>(<span class="ident">Command::SetFrequency</span>(<span class="number">110.0</span>), <span class="number">0</span>);
+ 
+<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">frequency</span> <span class="op">=</span> <span class="number">110.0</span>;
+<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">beat</span> <span class="op">=</span> <span class="number">0</span>;
+ 
+<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">request_callback</span> <span class="op">=</span> <span class="kw">move</span> <span class="op">|</span><span class="ident">chip</span>: <span class="kw-2">&amp;mut</span> <span class="ident">ChipState</span><span class="op">|</span> {
+    <span class="ident">beat</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
+    <span class="kw">while</span> <span class="ident">beat</span> <span class="op">&gt;</span><span class="op">=</span> <span class="number">4</span> {
+        <span class="ident">frequency</span> <span class="op">+</span><span class="op">=</span> <span class="number">110.0</span>;
+ 
+        <span class="ident">chip</span>.<span class="ident">send_command</span>(<span class="ident">Command::SetFrequency</span>(<span class="ident">frequency</span>), <span class="number">0</span>);
+        <span class="ident">beat</span> <span class="op">-</span><span class="op">=</span> <span class="number">4</span>;
+    }
+};
+ 
+<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">audio_sample_request</span> <span class="op">=</span> <span class="kw">move</span> <span class="op">|</span><span class="ident">buffer</span>: <span class="kw-2">&amp;mut</span> [<span class="ident">f32</span>]<span class="op">|</span> {
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">sample_index</span> <span class="op">=</span> <span class="number">0</span>;
+     
+    <span class="kw">while</span> <span class="ident">sample_index</span> <span class="op">&lt;</span> <span class="ident">buffer</span>.<span class="ident">len</span>() {
+        <span class="kw">let</span> <span class="ident">generated_data</span> <span class="op">=</span> <span class="ident">chip</span>.<span class="ident">generate</span>(<span class="kw-2">&amp;mut</span> <span class="ident">buffer</span>[<span class="ident">sample_index</span>..]).<span class="ident">unwrap</span>();
+        <span class="ident">sample_index</span> <span class="op">+</span><span class="op">=</span> <span class="ident">generated_data</span>.<span class="ident">generated</span>;
+         
+        <span class="macro">assert!</span>(<span class="ident">generated_data</span>.<span class="ident">generated</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span>);
+     
+        <span class="kw">if</span> <span class="ident">generated_data</span>.<span class="ident">remaining_samples</span> <span class="op">==</span> <span class="number">0</span> { <span class="ident">request_callback</span>(<span class="kw-2">&amp;mut</span> <span class="ident">chip</span>); }
+    }
+};</code></pre></div>
 </div></details><h2 id="modules" class="small-section-header"><a href="#modules">Modules</a></h2>
 <div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="mod" href="c_compatible/index.html" title="lsynth::c_compatible mod">c_compatible</a></div><div class="item-right docblock-short"><p>Provides C compatible functions for working with this library as a DLL.</p>
 </div></div><div class="item-row"><div class="item-left module-item"><a class="mod" href="errors/index.html" title="lsynth::errors mod">errors</a></div><div class="item-right docblock-short"><p>Contains the error types that LSynth could return</p>
