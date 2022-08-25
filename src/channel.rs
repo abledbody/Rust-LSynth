@@ -5,7 +5,9 @@ use crate::{Command, waveform, errors::*};
 /// The time it takes for amplitude and panning changes to occur. This prevents clicks from abrupt changes.
 pub const RAMPING_RATE: f32 = 500.0;
 /// Used to reduce the wandering of brownian noise. Calculated as `x / (BROWNIAN_LEAK * timestep + 1)^2`
-pub const BROWNIAN_LEAK: f32 = 0.1;
+pub const BROWNIAN_LEAK: f32 = 0.03;
+/// The maximum amplitude of individual brownian noise samples. Does not represent the maximum power of the noise waveform overall.
+pub const BROWNIAN_STEP: f32 = 0.5;
 
 /// All the parameters needed in order to sample from a channel.
 pub(crate) struct ChannelState {
@@ -100,8 +102,9 @@ impl ChannelState {
 		
 		if self.waveform == 6 {
 			while self.period >= 1.0 {
-				let exponential_decay = self.frequency * step * BROWNIAN_LEAK + 1.0;
-				self.noise_sample = self.noise_sample / (exponential_decay * exponential_decay) + waveform::noise();
+				let decay = self.frequency * step * BROWNIAN_LEAK + 1.0;
+				self.noise_sample /= decay * decay;
+				self.noise_sample += waveform::noise() * BROWNIAN_STEP;
 				self.period -= 1.0
 			}
 		}

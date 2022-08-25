@@ -207,6 +207,9 @@
 <span id="202">202</span>
 <span id="203">203</span>
 <span id="204">204</span>
+<span id="205">205</span>
+<span id="206">206</span>
+<span id="207">207</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Contains tools for keeping track of the state of individual channels.</span>
 
 <span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">Command</span>, <span class="ident">waveform</span>, <span class="ident">errors</span>::<span class="kw-2">*</span>};
@@ -214,7 +217,9 @@
 <span class="doccomment">/// The time it takes for amplitude and panning changes to occur. This prevents clicks from abrupt changes.</span>
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">RAMPING_RATE</span>: <span class="ident">f32</span> <span class="op">=</span> <span class="number">500.0</span>;
 <span class="doccomment">/// Used to reduce the wandering of brownian noise. Calculated as `x / (BROWNIAN_LEAK * timestep + 1)^2`</span>
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">BROWNIAN_LEAK</span>: <span class="ident">f32</span> <span class="op">=</span> <span class="number">0.1</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">BROWNIAN_LEAK</span>: <span class="ident">f32</span> <span class="op">=</span> <span class="number">0.03</span>;
+<span class="doccomment">/// The maximum amplitude of individual brownian noise samples. Does not represent the maximum power of the noise waveform overall.</span>
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">BROWNIAN_STEP</span>: <span class="ident">f32</span> <span class="op">=</span> <span class="number">0.5</span>;
 
 <span class="doccomment">/// All the parameters needed in order to sample from a channel.</span>
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct</span> <span class="ident">ChannelState</span> {
@@ -309,8 +314,9 @@
 		
 		<span class="kw">if</span> <span class="self">self</span>.<span class="ident">waveform</span> <span class="op">==</span> <span class="number">6</span> {
 			<span class="kw">while</span> <span class="self">self</span>.<span class="ident">period</span> <span class="op">&gt;</span><span class="op">=</span> <span class="number">1.0</span> {
-				<span class="kw">let</span> <span class="ident">exponential_decay</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">frequency</span> <span class="op">*</span> <span class="ident">step</span> <span class="op">*</span> <span class="ident">BROWNIAN_LEAK</span> <span class="op">+</span> <span class="number">1.0</span>;
-				<span class="self">self</span>.<span class="ident">noise_sample</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">noise_sample</span> <span class="op">/</span> (<span class="ident">exponential_decay</span> <span class="op">*</span> <span class="ident">exponential_decay</span>) <span class="op">+</span> <span class="ident">waveform::noise</span>();
+				<span class="kw">let</span> <span class="ident">decay</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">frequency</span> <span class="op">*</span> <span class="ident">step</span> <span class="op">*</span> <span class="ident">BROWNIAN_LEAK</span> <span class="op">+</span> <span class="number">1.0</span>;
+				<span class="self">self</span>.<span class="ident">noise_sample</span> <span class="op">/</span><span class="op">=</span> <span class="ident">decay</span> <span class="op">*</span> <span class="ident">decay</span>;
+				<span class="self">self</span>.<span class="ident">noise_sample</span> <span class="op">+</span><span class="op">=</span> <span class="ident">waveform::noise</span>() <span class="op">*</span> <span class="ident">BROWNIAN_STEP</span>;
 				<span class="self">self</span>.<span class="ident">period</span> <span class="op">-</span><span class="op">=</span> <span class="number">1.0</span>
 			}
 		}
