@@ -48,9 +48,11 @@ pub mod c_compatible;
 
 use channel::ChannelState;
 use errors::{InvalidChannelError, LSynthError, UnevenBufferSliceError};
+use serde::{Serialize, Deserialize};
 
 /// The different types of commands that can be sent to channels.
 #[derive(Clone)]
+#[derive(Serialize, Deserialize)]
 #[repr(C)]
 pub enum Command {
 	/// An instruction to set the waveform of the channel.
@@ -73,7 +75,7 @@ pub enum Command {
 	/// An instruction to set the panning of the channel on a scale of -1..1
 	SetPanning(f32),
 	/// An instruction to change the custom waveform stored in the channel.
-	SetCustomWaveform([f32; waveform::CUSTOM_WIDTH]),
+	SetCustomWaveform(waveform::CustomWaveform),
 	/// An instruction to set the phase of a waveform directly.
 	SetPhase(f32),
 	
@@ -101,6 +103,7 @@ pub struct ChipState {
 }
 
 /// Parameters detailing how an LSynth chip is intended to operate.
+#[derive(Serialize, Deserialize)]
 pub struct ChipParameters {
 	/// The samplerate in hertz.
 	samplerate: usize,
