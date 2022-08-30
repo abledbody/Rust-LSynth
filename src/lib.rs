@@ -1,14 +1,14 @@
 #![deny(clippy::missing_docs_in_private_items)]
 
-//! This library is for generating LSynth audio streams.
+//! This library is for generating L-Synth audio streams.
 //! 
-//! Here is an example of the basic setup of the LSynth chip.
+//! Here is an example of the basic setup of the LSynth chip. Whatever library you are using to play this audio should provide an audio buffer for L-Synth to populate, represented here by the `buffer` parameter of `audio_sample_request`
 //! ```
 //! use lsynth::*;
 //! 
 //! let mut chip = ChipState::new(4, ChipParameters::new(44_100, 0.5, 120.0));
 //! 
-//! chip.send_command(Command::SetAmplitude(0.0), 0);
+//! chip.send_command(Command::SetAmplitude(0.5), 0);
 //! chip.send_command(Command::SetFrequency(110.0), 0);
 //! 
 //! let mut frequency = 110.0;
