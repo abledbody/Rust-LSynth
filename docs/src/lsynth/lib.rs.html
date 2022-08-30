@@ -242,6 +242,9 @@
 <span id="237">237</span>
 <span id="238">238</span>
 <span id="239">239</span>
+<span id="240">240</span>
+<span id="241">241</span>
+<span id="242">242</span>
 </pre><pre class="rust"><code><span class="attribute">#![<span class="ident">deny</span>(<span class="ident">clippy::missing_docs_in_private_items</span>)]</span>
 
 <span class="doccomment">//! This library is for generating LSynth audio streams.</span>
@@ -292,9 +295,11 @@
 
 <span class="kw">use</span> <span class="ident">channel::ChannelState</span>;
 <span class="kw">use</span> <span class="ident">errors</span>::{<span class="ident">InvalidChannelError</span>, <span class="ident">LSynthError</span>, <span class="ident">UnevenBufferSliceError</span>};
+<span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">Serialize</span>, <span class="ident">Deserialize</span>};
 
 <span class="doccomment">/// The different types of commands that can be sent to channels.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Serialize</span>, <span class="ident">Deserialize</span>)]</span>
 <span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Command</span> {
 	<span class="doccomment">/// An instruction to set the waveform of the channel.</span>
@@ -317,7 +322,7 @@
 	<span class="doccomment">/// An instruction to set the panning of the channel on a scale of -1..1</span>
 	<span class="ident">SetPanning</span>(<span class="ident">f32</span>),
 	<span class="doccomment">/// An instruction to change the custom waveform stored in the channel.</span>
-	<span class="ident">SetCustomWaveform</span>([<span class="ident">f32</span>; <span class="ident">waveform::CUSTOM_WIDTH</span>]),
+	<span class="ident">SetCustomWaveform</span>(<span class="ident">waveform::CustomWaveform</span>),
 	<span class="doccomment">/// An instruction to set the phase of a waveform directly.</span>
 	<span class="ident">SetPhase</span>(<span class="ident">f32</span>),
 	
@@ -345,6 +350,7 @@
 }
 
 <span class="doccomment">/// Parameters detailing how an LSynth chip is intended to operate.</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Serialize</span>, <span class="ident">Deserialize</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ChipParameters</span> {
 	<span class="doccomment">/// The samplerate in hertz.</span>
 	<span class="ident">samplerate</span>: <span class="ident">usize</span>,
