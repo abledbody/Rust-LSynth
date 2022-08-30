@@ -3,6 +3,9 @@ name = "lsynth"
 version = "1.0.0"
 authors = ["abledbody <drewisakid@gmail.com>"]
 edition = "2018"
+license-file = "License.md"
+description = "A virtual soundchip which generates primitive waveforms in real-time."
+repository = "https://github.com/abledbody/Rust-LSynth"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
