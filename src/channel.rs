@@ -104,7 +104,7 @@ impl ChannelState {
 			while self.period >= 1.0 {
 				let decay = self.frequency * step * BROWNIAN_LEAK + 1.0;
 				self.noise_sample /= decay * decay;
-				self.noise_sample += waveform::noise() * BROWNIAN_STEP;
+				self.noise_sample = (self.noise_sample + waveform::noise() * BROWNIAN_STEP).clamp(-1.0, 1.0);
 				self.period -= 1.0
 			}
 		}

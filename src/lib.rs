@@ -218,6 +218,10 @@ impl ChipState {
 				frame[0] += l * self.parameters.amplitude;
 				frame[1] += r * self.parameters.amplitude;
 			}
+			
+			// Hard clip to prevent artifacts.
+			frame[0] = frame[0].clamp(-1.0, 1.0);
+			frame[1] = frame[1].clamp(-1.0, 1.0);
 		}
 		
 		// Adds only the fractional part of tick_frames.

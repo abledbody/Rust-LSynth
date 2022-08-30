@@ -1,6 +1,6 @@
 [package]
 name = "lsynth"
-version = "1.0.0"
+version = "1.0.1"
 authors = ["abledbody <drewisakid@gmail.com>"]
 edition = "2018"
 license-file = "License.md"
