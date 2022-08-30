@@ -316,7 +316,7 @@
 			<span class="kw">while</span> <span class="self">self</span>.<span class="ident">period</span> <span class="op">&gt;</span><span class="op">=</span> <span class="number">1.0</span> {
 				<span class="kw">let</span> <span class="ident">decay</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">frequency</span> <span class="op">*</span> <span class="ident">step</span> <span class="op">*</span> <span class="ident">BROWNIAN_LEAK</span> <span class="op">+</span> <span class="number">1.0</span>;
 				<span class="self">self</span>.<span class="ident">noise_sample</span> <span class="op">/</span><span class="op">=</span> <span class="ident">decay</span> <span class="op">*</span> <span class="ident">decay</span>;
-				<span class="self">self</span>.<span class="ident">noise_sample</span> <span class="op">+</span><span class="op">=</span> <span class="ident">waveform::noise</span>() <span class="op">*</span> <span class="ident">BROWNIAN_STEP</span>;
+				<span class="self">self</span>.<span class="ident">noise_sample</span> <span class="op">=</span> (<span class="self">self</span>.<span class="ident">noise_sample</span> <span class="op">+</span> <span class="ident">waveform::noise</span>() <span class="op">*</span> <span class="ident">BROWNIAN_STEP</span>).<span class="ident">clamp</span>(<span class="op">-</span><span class="number">1.0</span>, <span class="number">1.0</span>);
 				<span class="self">self</span>.<span class="ident">period</span> <span class="op">-</span><span class="op">=</span> <span class="number">1.0</span>
 			}
 		}

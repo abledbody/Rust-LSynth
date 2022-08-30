@@ -245,17 +245,21 @@
 <span id="240">240</span>
 <span id="241">241</span>
 <span id="242">242</span>
+<span id="243">243</span>
+<span id="244">244</span>
+<span id="245">245</span>
+<span id="246">246</span>
 </pre><pre class="rust"><code><span class="attribute">#![<span class="ident">deny</span>(<span class="ident">clippy::missing_docs_in_private_items</span>)]</span>
 
-<span class="doccomment">//! This library is for generating LSynth audio streams.</span>
+<span class="doccomment">//! This library is for generating L-Synth audio streams.</span>
 <span class="doccomment">//! </span>
-<span class="doccomment">//! Here is an example of the basic setup of the LSynth chip.</span>
+<span class="doccomment">//! Here is an example of the basic setup of the LSynth chip. Whatever library you are using to play this audio should provide an audio buffer for L-Synth to populate, represented here by the `buffer` parameter of `audio_sample_request`</span>
 <span class="doccomment">//! ```</span>
 <span class="doccomment">//! use lsynth::*;</span>
 <span class="doccomment">//! </span>
 <span class="doccomment">//! let mut chip = ChipState::new(4, ChipParameters::new(44_100, 0.5, 120.0));</span>
 <span class="doccomment">//! </span>
-<span class="doccomment">//! chip.send_command(Command::SetAmplitude(0.0), 0);</span>
+<span class="doccomment">//! chip.send_command(Command::SetAmplitude(0.5), 0);</span>
 <span class="doccomment">//! chip.send_command(Command::SetFrequency(110.0), 0);</span>
 <span class="doccomment">//! </span>
 <span class="doccomment">//! let mut frequency = 110.0;</span>
@@ -465,6 +469,10 @@
 				<span class="ident">frame</span>[<span class="number">0</span>] <span class="op">+</span><span class="op">=</span> <span class="ident">l</span> <span class="op">*</span> <span class="self">self</span>.<span class="ident">parameters</span>.<span class="ident">amplitude</span>;
 				<span class="ident">frame</span>[<span class="number">1</span>] <span class="op">+</span><span class="op">=</span> <span class="ident">r</span> <span class="op">*</span> <span class="self">self</span>.<span class="ident">parameters</span>.<span class="ident">amplitude</span>;
 			}
+			
+			<span class="comment">// Hard clip to prevent artifacts.</span>
+			<span class="ident">frame</span>[<span class="number">0</span>] <span class="op">=</span> <span class="ident">frame</span>[<span class="number">0</span>].<span class="ident">clamp</span>(<span class="op">-</span><span class="number">1.0</span>, <span class="number">1.0</span>);
+			<span class="ident">frame</span>[<span class="number">1</span>] <span class="op">=</span> <span class="ident">frame</span>[<span class="number">1</span>].<span class="ident">clamp</span>(<span class="op">-</span><span class="number">1.0</span>, <span class="number">1.0</span>);
 		}
 		
 		<span class="comment">// Adds only the fractional part of tick_frames.</span>
